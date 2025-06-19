@@ -2,7 +2,7 @@
 // import { useState } from 'react';
 import { MapPin, Home, Trash2 } from 'lucide-react';
 import { type Property, type PCRDATATYPE } from '../utils/types';
-import EditableText from './EditableText';
+import EditablePropContent from './EditablePropContent';
 
 
 const PropertyCard = ({ property, index, type = "sale", toggleEdit, setEditedData, startIndex, cloudinaryConfig }: {
@@ -35,40 +35,6 @@ const PropertyCard = ({ property, index, type = "sale", toggleEdit, setEditedDat
         }));
     };
 
-    // const EditableText = ({
-    //     value,
-    //     onChange,
-    //     className = "",
-    //     multiline = false,
-    //     placeholder = ""
-    // }: {
-    //     value: string | undefined;
-    //     onChange: (value: string) => void;
-    //     className?: string;
-    //     multiline?: boolean;
-    //     placeholder?: string;
-    // }) => {
-    //     if (toggleEdit) {
-    //         return multiline ? (
-    //             <textarea
-    //                 value={value || ""}
-    //                 onChange={(e) => onChange(e.target.value)}
-    //                 className={`border border-gray-300 rounded px-2 py-1 w-full resize-none ${className}`}
-    //                 placeholder={placeholder}
-    //                 rows={3}
-    //             />
-    //         ) : (
-    //             <input
-    //                 type="text"
-    //                 value={value || ""}
-    //                 onChange={(e) => onChange(e.target.value)}
-    //                 className={`border border-gray-300 rounded px-2 py-1 w-full ${className}`}
-    //                 placeholder={placeholder}
-    //             />
-    //         );
-    //     }
-    //     return <span className={className}>{value}</span>;
-    // };
 
 
     return (
@@ -94,7 +60,7 @@ const PropertyCard = ({ property, index, type = "sale", toggleEdit, setEditedDat
                 }
                 <div className="flex-1">
                     <div className="font-semibold text-gray-900 mb-2 leading-relaxed">
-                        <EditableText
+                        <EditablePropContent
                             value={property.description}
                             onChange={(value) => updateProperty(index, 'description', value)}
                             className="font-semibold text-gray-900"
@@ -105,7 +71,7 @@ const PropertyCard = ({ property, index, type = "sale", toggleEdit, setEditedDat
                     </div>
                     <div className="flex items-center gap-2 text-gray-600 mb-2">
                         <MapPin className="w-4 h-4" />
-                        <EditableText
+                        <EditablePropContent
                             value={property.location}
                             onChange={(value) => updateProperty(index, 'location', value)}
                             className="text-sm"
@@ -116,7 +82,7 @@ const PropertyCard = ({ property, index, type = "sale", toggleEdit, setEditedDat
                     <div className="space-y-2">
                         <div className="text-sm">
                             <span className="font-medium text-gray-700">Title: </span>
-                            <EditableText
+                            <EditablePropContent
                                 value={property.title}
                                 onChange={(value) => updateProperty(index, 'title', value)}
                                 className="text-gray-600"
@@ -125,7 +91,7 @@ const PropertyCard = ({ property, index, type = "sale", toggleEdit, setEditedDat
                             />
                         </div>
                         <div className="text-lg font-bold text-green-600">
-                            <EditableText
+                            <EditablePropContent
                                 value={type === "shortlet" ? property.rent : property.price}
                                 onChange={(value) => updateProperty(index, type === "shortlet" ? 'rent' : 'price', value)}
                                 className="text-lg font-bold text-green-600"
@@ -135,7 +101,7 @@ const PropertyCard = ({ property, index, type = "sale", toggleEdit, setEditedDat
                         </div>
                         {(property.note || toggleEdit) && (
                             <div className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
-                                <EditableText
+                                <EditablePropContent
                                     value={property.note}
                                     onChange={(value) => updateProperty(index, 'note', value)}
                                     className="text-sm text-blue-600"
@@ -147,7 +113,7 @@ const PropertyCard = ({ property, index, type = "sale", toggleEdit, setEditedDat
                         {toggleEdit && (
                             <div className="text-sm">
                                 <span className="font-medium text-gray-700">Image URL: </span>
-                                <EditableText
+                                <EditablePropContent
                                     value={property?.image || ""}
                                     onChange={(value) => updateProperty(index, 'image', value)}
                                     className="text-gray-600"

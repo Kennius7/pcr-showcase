@@ -1,10 +1,11 @@
-
 import { useEffect, useState } from 'react';
-import { Phone, Mail, Globe, Building, Crown, Save, Edit, Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { PCR_DATA } from '../utils/data';
+import { Phone, Mail, Globe, Building, Crown, Save, Edit, Plus, Trash2 } from 'lucide-react';
+import { PCR_DATA, MAIN_URL } from '../utils/data';
 import axios from 'axios';
 import PropertyCard from './PropertyCard';
 import { type Property, type PCRDATATYPE } from '../utils/types';
+import EditableText from './EditableText';
+import PaginationControls from './Pagination';
 
 
 const PropertyBulletin = () => {
@@ -14,10 +15,10 @@ const PropertyBulletin = () => {
   const [editedData, setEditedData] = useState<PCRDATATYPE>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const cloudinaryConfig = { 
-    cloudName: import.meta.env.REACT_APP_CLOUDINARY_CLOUD_NAME, 
-    uploadPreset: import.meta.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET, 
-  }
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+  const cloudinaryConfig = { cloudName: cloudName, uploadPreset: uploadPreset }
+  // console.log("Cloudinary Config:", cloudinaryConfig);
 
   const { 
     headerTitle, 
@@ -46,7 +47,7 @@ const PropertyBulletin = () => {
 
   const fetchGreeting = async () => {
     try {
-      const response = await axios.get('https://pcr-backend-server.vercel.app/api/hello');
+      const response = await axios.get(`${MAIN_URL}/hello`);
       return response?.data?.message;
     } catch (error) {
       console.error('Error fetching greeting:', error);
@@ -82,16 +83,6 @@ const PropertyBulletin = () => {
     }));
   };
 
-  // const updateProperty = (index: number, field: string, value: string) => {
-  //   const actualIndex = startIndex + index; // Convert local index to global index
-  //   setEditedData(prev => ({
-  //     ...prev,
-  //     propertyData: prev.propertyData?.map((prop, i) => 
-  //       i === actualIndex ? { ...prop, [field]: value } : prop
-  //     )
-  //   }));
-  // };
-
   const addProperty = () => {
     const newProperty: Property = {
       id: Date.now(),
@@ -103,20 +94,12 @@ const PropertyBulletin = () => {
     };
     setEditedData(prev => ({
       ...prev,
-      propertyData: [...(prev.propertyData || []), newProperty]
+      propertyData: [newProperty, ...(prev.propertyData || [])]
     }));
     // Navigate to the last page to see the new property
-    const newTotalPages = Math.ceil(((propertyData?.length || 0) + 1) / itemsPerPage);
-    setCurrentPage(newTotalPages);
+    // const newTotalPages = Math.ceil(((propertyData?.length || 0) + 1) / itemsPerPage);
+    setCurrentPage(1);
   };
-
-  // const removeProperty = (index: number) => {
-  //   const actualIndex = startIndex + index; // Convert local index to global index
-  //   setEditedData(prev => ({
-  //     ...prev,
-  //     propertyData: prev.propertyData?.filter((_, i) => i !== actualIndex)
-  //   }));
-  // };
 
   const updatePhoneNumber = (index: number, field: string, value: string) => {
     setEditedData(prev => ({
@@ -146,146 +129,9 @@ const PropertyBulletin = () => {
     }));
   };
 
-  const EditableText = ({ 
-    value, 
-    onChange, 
-    className = "", 
-    multiline = false,
-    placeholder = ""
-  }: {
-    value: string | undefined;
-    onChange: (value: string) => void;
-    className?: string;
-    multiline?: boolean;
-    placeholder?: string;
-  }) => {
-    if (toggleEdit) {
-      return multiline ? (
-        <textarea
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
-          className={`border border-gray-300 rounded px-2 py-1 w-full resize-none ${className}`}
-          placeholder={placeholder}
-          rows={3}
-        />
-      ) : (
-        <input
-          type="text"
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
-          className={`border border-gray-300 rounded px-2 py-1 w-full ${className}`}
-          placeholder={placeholder}
-        />
-      );
-    }
-    return <span className={className}>{value}</span>;
-  };
-
-  const PaginationControls = () => {
-    if (totalPages <= 1) return null;
-
-    const pageNumbers = [];
-    const maxVisiblePages = 5;
-    
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    // eslint-disable-next-line prefer-const
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-      pageNumbers.push(i);
-    }
-
-    return (
-      <div className="flex items-center justify-between mt-8 p-4 bg-white rounded-lg shadow-sm">
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
-            Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} properties
-          </span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="border border-gray-300 rounded px-2 py-1 text-sm"
-          >
-            <option value={5}>5 per page</option>
-            <option value={10}>10 per page</option>
-            <option value={20}>20 per page</option>
-            <option value={50}>50 per page</option>
-          </select>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className={`p-2 rounded ${
-              currentPage === 1 
-                ? 'text-gray-400 cursor-not-allowed' 
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          
-          {startPage > 1 && (
-            <>
-              <button
-                onClick={() => setCurrentPage(1)}
-                className="px-3 py-1 rounded hover:bg-gray-100 text-sm"
-              >
-                1
-              </button>
-              {startPage > 2 && <span className="text-gray-400">...</span>}
-            </>
-          )}
-          
-          {pageNumbers.map(page => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 rounded text-sm ${
-                page === currentPage
-                  ? 'bg-blue-600 text-white'
-                  : 'hover:bg-gray-100 text-gray-600'
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-          
-          {endPage < totalPages && (
-            <>
-              {endPage < totalPages - 1 && <span className="text-gray-400">...</span>}
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                className="px-3 py-1 rounded hover:bg-gray-100 text-sm"
-              >
-                {totalPages}
-              </button>
-            </>
-          )}
-          
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className={`p-2 rounded ${
-              currentPage === totalPages 
-                ? 'text-gray-400 cursor-not-allowed' 
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    );
-  };
+  const handleReset = () => {
+    console.log("Resetting data...");
+  }
 
 
 
@@ -301,6 +147,7 @@ const PropertyBulletin = () => {
                 onChange={(value) => updateEditedData('headerTitle', value)}
                 className="text-3xl font-bold text-gray-900"
                 placeholder="Header Title"
+                toggleEdit={toggleEdit}
               />
             </h1>
             <h2 className="text-xl text-blue-600 font-semibold mb-4">
@@ -319,6 +166,7 @@ const PropertyBulletin = () => {
                     className="text-gray-600"
                     multiline={true}
                     placeholder="Office address"
+                    toggleEdit={toggleEdit}
                   />
                 </div>
               </div>
@@ -329,6 +177,7 @@ const PropertyBulletin = () => {
                     value={officeEmail}
                     onChange={(value) => updateEditedData('officeEmail', value)}
                     placeholder="Office email"
+                    toggleEdit={toggleEdit}
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -337,6 +186,7 @@ const PropertyBulletin = () => {
                     value={officeWebsite}
                     onChange={(value) => updateEditedData('officeWebsite', value)}
                     placeholder="Office website"
+                    toggleEdit={toggleEdit}
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -349,6 +199,7 @@ const PropertyBulletin = () => {
                           onChange={(value) => updatePhoneNumber(index, 'phoneNumber', value)}
                           className="text-sm"
                           placeholder="Phone number"
+                          toggleEdit={toggleEdit}
                         />
                         {toggleEdit && (
                           <button
@@ -373,7 +224,7 @@ const PropertyBulletin = () => {
                 <div className="flex items-center gap-2 bg-slate-200 rounded-[4px] py-2 px-1">
                   {toggleEdit ? <Save className="w-4 h-4 text-green-600" /> : <Crown className="w-4 h-4 text-blue-600" />}
                   {toggleEdit ? (
-                    <div className="flex gap-2">
+                    <div className="flex gap-6">
                       <span 
                         onClick={handleSave} 
                         className="cursor-pointer text-green-600 hover:text-green-800"
@@ -385,6 +236,12 @@ const PropertyBulletin = () => {
                         className="cursor-pointer text-gray-600 hover:text-gray-800"
                       >
                         Cancel
+                      </span>
+                      <span 
+                        onClick={handleReset} 
+                        className="cursor-pointer text-red-400 hover:text-red-800"
+                      >
+                        Reset
                       </span>
                     </div>
                   ) : (
@@ -443,7 +300,16 @@ const PropertyBulletin = () => {
             ))}
           </div>
           
-          <PaginationControls />
+          <PaginationControls 
+            setItemsPerPage={setItemsPerPage} 
+            setCurrentPage={setCurrentPage} 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+          />
         </section>
 
         {/* Contact Section */}
@@ -458,6 +324,7 @@ const PropertyBulletin = () => {
                 onChange={(value) => updateEditedData('companyName', value)}
                 className="font-semibold"
                 placeholder="Company name"
+                toggleEdit={toggleEdit}
               />
             </p>
             <p className="text-gray-600">
@@ -466,6 +333,7 @@ const PropertyBulletin = () => {
                 onChange={(value) => updateEditedData('companyType', value)}
                 className="text-gray-600"
                 placeholder="Company type"
+                toggleEdit={toggleEdit}
               />
             </p>
             <p className="text-blue-600 font-medium">
@@ -474,6 +342,7 @@ const PropertyBulletin = () => {
                 onChange={(value) => updateEditedData('officeWebsite', value)}
                 className="text-blue-600 font-medium"
                 placeholder="Website"
+                toggleEdit={toggleEdit}
               />
             </p>
             <div className="flex flex-wrap justify-center gap-4 mt-4">
@@ -485,12 +354,14 @@ const PropertyBulletin = () => {
                       value={number.phoneNumber}
                       onChange={(value) => updatePhoneNumber(index, 'phoneNumber', value)}
                       placeholder="Phone number"
+                      toggleEdit={toggleEdit}
                     />
                     {' - '}
                     <EditableText
                       value={number.name}
                       onChange={(value) => updatePhoneNumber(index, 'name', value)}
                       placeholder="Name"
+                      toggleEdit={toggleEdit}
                     />
                   </span>
                 </div>

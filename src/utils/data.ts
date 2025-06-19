@@ -1,6 +1,8 @@
 import PCR_PICS from '../assets/img/pcr-image1.jpg';
 
 
+export const MAIN_URL = "https://pcr-backend-server.vercel.app/api";
+
 export const housesForSale = [
     {
         id: 1,
@@ -67,7 +69,6 @@ export const housesForSale = [
         image: PCR_PICS,
     },
 ];
-
 
 export const PCR_DATA = {
     companyName: "Jide Onasile & Co.",

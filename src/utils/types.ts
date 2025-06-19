@@ -38,4 +38,14 @@ export interface EditableTextProps {
     toggleEdit: boolean; // Added this as it was referenced but not in props
 }
 
+export type PaginationControlsProps = {
+    setItemsPerPage: (itemsPerPage: number) => void;
+    setCurrentPage: (page: number | ((prev: number) => number)) => void;
+    currentPage: number;
+    totalPages: number;
+    startIndex: number;
+    endIndex: number;
+    totalItems: number;
+    itemsPerPage: number;
+};
 
