@@ -16,3 +16,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.dot {
+  animation: loading 1.5s infinite;
+}
+.dot:nth-child(1) { animation-delay: 0s; }
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loading {
+  0%, 60%, 100% { opacity: 0; }
+  30% { opacity: 1; }
+}

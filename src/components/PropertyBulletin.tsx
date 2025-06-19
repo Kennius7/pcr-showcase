@@ -1,24 +1,29 @@
 import { useEffect, useState } from 'react';
 import { Phone, Mail, Globe, Building, Crown, Save, Edit, Plus, Trash2 } from 'lucide-react';
-import { PCR_DATA, MAIN_URL } from '../utils/data';
-import axios from 'axios';
 import PropertyCard from './PropertyCard';
 import { type Property, type PCRDATATYPE } from '../utils/types';
 import EditableText from './EditableText';
 import PaginationControls from './Pagination';
+import { handleReset, handleSaveData, handleFetchData } from '../services/api';
+import Loader from './Loader';
+import { getLocalStorageObject } from '../utils/data';
+
 
 
 const PropertyBulletin = () => {
-  const [messageCheck, setMessageCheck] = useState("");
   const [toggleEdit, setToggleEdit] = useState(false);
   const [pcrData, setPcrData] = useState<PCRDATATYPE>({});
   const [editedData, setEditedData] = useState<PCRDATATYPE>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [isPageLoading, setIsPageLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
   const cloudinaryConfig = { cloudName: cloudName, uploadPreset: uploadPreset }
-  // console.log("Cloudinary Config:", cloudinaryConfig);
+
+
 
   const { 
     headerTitle, 
@@ -45,35 +50,20 @@ const PropertyBulletin = () => {
     }
   }, [totalPages, currentPage]);
 
-  const fetchGreeting = async () => {
-    try {
-      const response = await axios.get(`${MAIN_URL}/hello`);
-      return response?.data?.message;
-    } catch (error) {
-      console.error('Error fetching greeting:', error);
-      throw error;
-    }
-  }
-
   useEffect(() => {
-    setPcrData(PCR_DATA);
-    setEditedData(PCR_DATA);
-    fetchGreeting().then((greeting) => {
-      console.log(greeting);
-      setMessageCheck(greeting);
-    });
-  }, []);
+    handleFetchData(setPcrData, setIsPageLoading, setError);
+  }, [pcrData]);
 
-  const handleAdminCheck = () => {
-    console.log("Fetch Greetings:", messageCheck);
-    setToggleEdit(!toggleEdit);
+   // Retry function
+  const handleRetry = () => {
+    handleFetchData(setPcrData, setIsPageLoading, setError);
   };
 
-  const handleSave = () => {
-    setPcrData(editedData);
-    setToggleEdit(false);
-    // Here you would typically make an API call to save the data
-    console.log("Saving data:", editedData);
+  const handleAdminCheck = () => {
+    setPcrData(getLocalStorageObject("PCR_DATA"));
+    setEditedData(getLocalStorageObject("PCR_DATA"));
+    // console.log("PCR-DATA Checking:", editedData);
+    setToggleEdit(!toggleEdit);
   };
 
   const updateEditedData = (field: string, value: string | number | undefined) => {
@@ -129,8 +119,8 @@ const PropertyBulletin = () => {
     }));
   };
 
-  const handleReset = () => {
-    console.log("Resetting data...");
+  if (isPageLoading) {
+    <Loader retry={handleRetry} error={error} />
   }
 
 
@@ -226,7 +216,7 @@ const PropertyBulletin = () => {
                   {toggleEdit ? (
                     <div className="flex gap-6">
                       <span 
-                        onClick={handleSave} 
+                        onClick={() => handleSaveData(editedData, setToggleEdit, setPcrData, setIsPageLoading, setError)} 
                         className="cursor-pointer text-green-600 hover:text-green-800"
                       >
                         Save Changes
@@ -238,7 +228,7 @@ const PropertyBulletin = () => {
                         Cancel
                       </span>
                       <span 
-                        onClick={handleReset} 
+                        onClick={() => handleReset(setPcrData, setIsPageLoading, setError)} 
                         className="cursor-pointer text-red-400 hover:text-red-800"
                       >
                         Reset

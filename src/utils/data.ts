@@ -1,7 +1,22 @@
 import PCR_PICS from '../assets/img/pcr-image1.jpg';
+import type { PCRDATATYPE } from './types';
 
 
 export const MAIN_URL = "https://pcr-backend-server.vercel.app/api";
+
+export const setLocalStorageObject = (key: string, obj: PCRDATATYPE) => {
+    localStorage.setItem(key, JSON.stringify(obj));
+}
+
+export const getLocalStorageObject = (key: string) => {
+    try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : null;
+    } catch (error) {
+        console.error('Error parsing localStorage item:', error);
+        return null;
+    }
+}
 
 export const housesForSale = [
     {
