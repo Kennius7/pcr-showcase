@@ -16,6 +16,16 @@ interface ApiErrorResponse {
     [key: string]: unknown;
 }
 
+interface UserProfileData {
+    name: string;
+    email: string;
+    password: string;
+    [key: string]: unknown;
+}
+
+type SetProfileData = (data: UserProfileData) => void;
+type SetIsTokenExpired = (expired: boolean) => void;
+
 const postOptions = {
     successMessage: 'User created successfully!',
     errorMessage: 'Failed to create user',
@@ -23,6 +33,22 @@ const postOptions = {
     //   'Authorization': `Bearer ${token}`
     // }
 }
+
+const successStylingOptions = {
+    duration: 3000,
+    className: "bg-green-50 border border-green-400 text-green-800 shadow-md",
+}
+
+const errorStylingOptions = {
+    duration: 3000,
+    className: "bg-red-50 border border-red-400 text-red-800 shadow-md",
+}
+
+let signUpOptions;
+let signInOptions;
+let signOutOptions;
+
+
 
 //? ==================================================================================
 //? ==================================================================================
@@ -133,7 +159,7 @@ export const handleReset = async (
             });
             console.log("Data posted successfully:", response.data);
             toast.dismiss(loadingToast);
-            toast.success(successMessage);
+            toast.success(successMessage, successStylingOptions);
             handleFetchData(setPcrData, setIsPageLoading, setError);
             return response.data;
         } catch (error) {
@@ -148,7 +174,7 @@ export const handleReset = async (
             } else if (error instanceof Error) {
                 errorMsg = error.message || errorMessage;
             }
-            toast.error(errorMsg);
+            toast.error(errorMsg, errorStylingOptions);
             console.error("Error posting data:", errorMsg);
             throw error;
         }
@@ -168,7 +194,7 @@ export const handleSaveData = async (
     setIsPageLoading: (loading: boolean) => void,
     setError: (error: string) => void
 ) => {
-    console.log("Resetting data...");
+    console.log("Saving data...");
 
     const result: SwalResult = await Swal.fire({
         title: 'Save?',
@@ -194,7 +220,7 @@ export const handleSaveData = async (
             const response = await axios.post(`${MAIN_URL}/product`, {...editedData, apiType: "POST_SAVED_PROPERTY_DATA"});
             console.log('Data saved successfully:', response.data);
             toast.dismiss(loadingToast);
-            toast.success(successMessage);
+            toast.success(successMessage, successStylingOptions);
             handleFetchData(setPcrData, setIsPageLoading, setError);
             setToggleEdit(false);
             return response.data;
@@ -206,8 +232,8 @@ export const handleSaveData = async (
             } else if (error instanceof Error) {
                 errorMsg = error.message || errorMessage;
             }
-            toast.error(errorMsg);
-            console.error('Error posting data:', errorMsg);
+            toast.error(errorMsg, errorStylingOptions);
+            console.error('Error saving data:', errorMsg);
             throw error;
         }
     } else {
@@ -215,5 +241,164 @@ export const handleSaveData = async (
         return; // Exit the function
     }
 }
+
+
+//? ==================================================================================
+//? ==================================================================================
+
+export const handleAuth = async (
+    apiType: string, 
+    email?: string, 
+    password?: string, 
+    name?: string, 
+    setIsLoggedIn?: (value: boolean) => void,
+    setProfileData?: (value: { name: string, email: string, password: string }) => void,
+    profileData?: { name: string, email: string, password: string }
+) => {
+    console.log("Handling authentication>>>>>:", apiType, email, password, name);
+    if (apiType === "SIGNUP") {
+        console.log("Signing up user...");
+        if (!name || !email || !password) {
+            console.error('Name, email, and password are required.');
+            return;
+        }
+
+        const {
+            successMessage = 'Signed Up successfully!',
+            errorMessage = 'Failed to sign up!',
+        } = signUpOptions || {};
+
+        try {
+            const loadingToast: string | number = toast.loading('Signing Up...');
+            const response = await axios.post(`${MAIN_URL}/auth`, { name, email, password, apiType });
+            toast.dismiss(loadingToast);
+            toast.success(successMessage, successStylingOptions);
+            console.log("Sign Up Response:", response.data);
+            return response.data;
+        } catch (error: unknown) {
+            toast.dismiss();
+            let errorMsg: string = errorMessage;
+            if (axios.isAxiosError(error)) {
+                errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || errorMessage;
+            } else if (error instanceof Error) {
+                errorMsg = error.message || errorMessage;
+            }
+            toast.error(errorMsg, errorStylingOptions);
+            console.error('Error signing up:', errorMsg);
+            throw error;
+        }
+    } else if (apiType === "SIGNIN") {
+        console.log("Logging in user...");
+        if (!email || !password) {
+            console.error('email and password are required.');
+            return;
+        }
+
+        const {
+            successMessage = 'Signed in successfully!',
+            errorMessage = 'Failed to sign in!',
+        } = signInOptions || {};
+
+        try {
+            const loadingToast: string | number = toast.loading('Signing in...');
+            const response = await axios.post(`${MAIN_URL}/auth`, { email, password, apiType });
+            const fetchedToken = response?.data?.token;
+            localStorage.setItem("user-token", fetchedToken);
+            toast.dismiss(loadingToast);
+            toast.success(successMessage, successStylingOptions);
+            console.log("Sign In Response:", response.data);
+            if (setIsLoggedIn) {
+                setIsLoggedIn(true);
+            }
+            return response.data;
+        } catch (error: unknown) {
+            toast.dismiss();
+            let errorMsg: string = errorMessage;
+            if (axios.isAxiosError(error)) {
+                errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || errorMessage;
+            } else if (error instanceof Error) {
+                errorMsg = error.message || errorMessage;
+            }
+            toast.error(errorMsg, errorStylingOptions);
+            console.error('Error signing in:', errorMsg);
+            throw error;
+        }
+    } else {
+        console.log("Signing out user...");
+        const {
+            successMessage = 'Signed out successfully!',
+            errorMessage = 'Failed to sign out!',
+        } = signOutOptions || {};
+
+        try {
+            const loadingToast: string | number = toast.loading('Signing out...');
+            const response = await axios.post(`${MAIN_URL}/auth`, { apiType, name });
+            toast.dismiss(loadingToast);
+            toast.success(successMessage, successStylingOptions);
+            console.log("Sign Out Response:", response.data);
+            localStorage.removeItem("user-token");
+            if (setIsLoggedIn) {
+                setIsLoggedIn(true);
+            }
+            if (setProfileData) {
+                setProfileData({ ...profileData, name: "", email: "", password: "" });
+            }
+            return response.data;
+        } catch (error: unknown) {
+            toast.dismiss();
+            let errorMsg: string = errorMessage;
+            if (axios.isAxiosError(error)) {
+                errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || errorMessage;
+            } else if (error instanceof Error) {
+                errorMsg = error.message || errorMessage;
+            }
+            toast.error(errorMsg, errorStylingOptions);
+            console.error('Error signing out:', errorMsg);
+            throw error;
+        }
+    }
+}
+
+
+//? ==================================================================================
+//? ==================================================================================
+
+export const handleFetchUserData = async (
+    profileData: UserProfileData,
+    setProfileData: SetProfileData,
+    setIsTokenExpired: SetIsTokenExpired
+): Promise<void> => {
+    const userToken = localStorage.getItem("user-token");
+    console.log("User Token: >>>>", userToken);
+    const apiType = "FETCHUSERDATA"; 
+    try {
+        const response = await axios.get(`${MAIN_URL}/user`, {
+            params: { apiType },
+            headers: { 
+                "Content-Type": "application/json", 
+                Authorization: `Bearer ${userToken}`,
+            },
+            // withCredentials: false,
+        });
+        const { name, email } = response.data.data;
+        console.log("Fetched Profile Data: ", response.data.data);
+
+        setProfileData({ 
+            ...profileData, 
+            name: name, 
+            email: email,
+        });
+        console.log("Updated Profile Data: ", profileData);
+        setIsTokenExpired(false);
+    } catch (error) {
+        let errorMessage: string = '';
+        if (axios.isAxiosError(error)) {
+            errorMessage = error.response?.data;
+        }
+        if (userToken && errorMessage === "Invalid Token!") setIsTokenExpired(true);
+        console.error("Error downloading profile data: >>>>", error);
+    }
+}
+
 
 

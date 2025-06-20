@@ -5,7 +5,16 @@ import { type Property, type PCRDATATYPE } from '../utils/types';
 import EditablePropContent from './EditablePropContent';
 
 
-const PropertyCard = ({ property, index, type = "sale", toggleEdit, setEditedData, startIndex, cloudinaryConfig }: {
+const PropertyCard = ({ 
+    property, 
+    index, 
+    type = "sale", 
+    toggleEdit, 
+    setEditedData, 
+    startIndex, 
+    cloudinaryConfig, 
+    adminChecker,
+}: {
     property: Property;
     index: number;
     type?: "sale" | "shortlet";
@@ -16,6 +25,7 @@ const PropertyCard = ({ property, index, type = "sale", toggleEdit, setEditedDat
         cloudName: string;
         uploadPreset: string;
     };
+    adminChecker: boolean;
 }) => {
     const updateProperty = (index: number, field: string, value: string) => {
         const actualIndex = startIndex + index; // Convert local index to global index
@@ -42,7 +52,7 @@ const PropertyCard = ({ property, index, type = "sale", toggleEdit, setEditedDat
             items-center bg-white border border-gray-200 rounded-lg md:p-6 p-2 shadow-sm hover:shadow-md 
             transition-shadow relative"
         >
-            {toggleEdit && (
+            {toggleEdit && adminChecker && (
                 <button
                     onClick={() => removeProperty(index)}
                     className="absolute top-2 right-2 p-1 bg-red-100 hover:bg-red-200 rounded text-red-600"

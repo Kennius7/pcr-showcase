@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Phone, Mail, Globe, Building, Crown, Save, Edit, Plus, Trash2 } from 'lucide-react';
 import PropertyCard from './PropertyCard';
@@ -9,6 +8,8 @@ import { handleReset, handleSaveData, handleFetchData, handleFetchUserData, hand
 import Loader from './Loader';
 import { getLocalStorageObject } from '../utils/data';
 import AuthModal from "../auth/AuthModal";
+
+
 
 const PropertyBulletin = () => {
   const [toggleEdit, setToggleEdit] = useState(false);
@@ -28,8 +29,7 @@ const PropertyBulletin = () => {
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
   const cloudinaryConfig = { cloudName: cloudName, uploadPreset: uploadPreset }
 
-  // Admin email constant
-  const ADMIN_EMAIL = "ogbogukenny@yahoo.com";
+
 
   const { 
     headerTitle, 
@@ -40,7 +40,7 @@ const PropertyBulletin = () => {
     propertyData, 
     companyName, 
     companyType,
-  } = toggleEdit && adminChecker ? editedData : pcrData;
+  } = toggleEdit && !adminChecker ? editedData : pcrData;
 
   // Pagination calculations
   const totalItems = propertyData?.length || 0;
@@ -66,16 +66,9 @@ const PropertyBulletin = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Updated admin checker to ensure user is logged in AND has admin email
   useEffect(() => {
-    const isAdmin = isLoggedIn && profileData?.email === ADMIN_EMAIL && !isTokenExpired;
-    setAdminChecker(isAdmin);
-    
-    // If user loses admin privileges while in edit mode, exit edit mode
-    if (!isAdmin && toggleEdit) {
-      setToggleEdit(false);
-    }
-  }, [profileData.email, isLoggedIn, isTokenExpired, toggleEdit]);
+    setAdminChecker(["ogbogukenny@yahoo.com"].includes(profileData?.email));
+  }, [profileData.email])
 
   // Retry function
   const handleRetry = () => {
@@ -89,26 +82,13 @@ const PropertyBulletin = () => {
   }
 
   const handleAdminCheck = () => {
-    // Only allow admin access for authenticated admin user
-    if (!isLoggedIn) {
-      setModalOpen(true);
-      return;
-    }
-    
-    if (!adminChecker) {
-      alert("Access denied. Only authorized admin can edit content.");
-      return;
-    }
-
     setPcrData(getLocalStorageObject("PCR_DATA"));
     setEditedData(getLocalStorageObject("PCR_DATA"));
+    // console.log("PCR-DATA Checking:", editedData);
     setToggleEdit(!toggleEdit);
   };
 
   const updateEditedData = (field: string, value: string | number | undefined) => {
-    // Only allow updates if user is admin
-    if (!adminChecker) return;
-    
     setEditedData(prev => ({
       ...prev,
       [field]: value
@@ -116,9 +96,6 @@ const PropertyBulletin = () => {
   };
 
   const addProperty = () => {
-    // Only allow adding properties if user is admin
-    if (!adminChecker) return;
-    
     const newProperty: Property = {
       id: Date.now(),
       description: "New Property Description",
@@ -131,13 +108,12 @@ const PropertyBulletin = () => {
       ...prev,
       propertyData: [newProperty, ...(prev.propertyData || [])]
     }));
+    // Navigate to the last page to see the new property
+    // const newTotalPages = Math.ceil(((propertyData?.length || 0) + 1) / itemsPerPage);
     setCurrentPage(1);
   };
 
   const updatePhoneNumber = (index: number, field: string, value: string) => {
-    // Only allow updates if user is admin
-    if (!adminChecker) return;
-    
     setEditedData(prev => ({
       ...prev,
       phoneNumberData: prev.phoneNumberData?.map((phone, i) => 
@@ -147,9 +123,6 @@ const PropertyBulletin = () => {
   };
 
   const addPhoneNumber = () => {
-    // Only allow adding phone numbers if user is admin
-    if (!adminChecker) return;
-    
     const newPhone = {
       id: Date.now(),
       phoneNumber: "New Phone Number",
@@ -162,45 +135,11 @@ const PropertyBulletin = () => {
   };
 
   const removePhoneNumber = (index: number) => {
-    // Only allow removing phone numbers if user is admin
-    if (!adminChecker) return;
-    
     setEditedData(prev => ({
       ...prev,
       phoneNumberData: prev.phoneNumberData?.filter((_, i) => i !== index)
     }));
   };
-
-  const handleSaveChanges = () => {
-    // Only allow saving if user is admin
-    if (!adminChecker) {
-      alert("Access denied. Only authorized admin can save changes.");
-      return;
-    }
-    handleSaveData(editedData, setToggleEdit, setPcrData, setIsPageLoading, setError);
-  };
-
-  const handleResetData = () => {
-    // Only allow reset if user is admin
-    if (!adminChecker) {
-      alert("Access denied. Only authorized admin can reset data.");
-      return;
-    }
-    handleReset(setPcrData, setIsPageLoading, setError);
-  };
-
-  const handleSignOut = () => {
-    handleAuth("SIGNOUT", profileData?.name);
-    setIsLoggedIn(false);
-    setToggleEdit(false); // Exit edit mode when signing out
-  };
-
-  // Function to refresh user data and admin status
-  const refreshUserData = () => {
-    handleFetchUserData(profileData, setProfileData, setIsTokenExpired);
-    // Reset admin checker will be handled by useEffect
-  };
-
 
 
 
@@ -216,7 +155,7 @@ const PropertyBulletin = () => {
                 onChange={(value) => updateEditedData('headerTitle', value)}
                 className="text-3xl font-bold text-gray-900"
                 placeholder="Header Title"
-                toggleEdit={toggleEdit && adminChecker}
+                toggleEdit={toggleEdit}
               />
             </h1>
             <h2 className="text-xl text-blue-600 font-semibold mb-4">
@@ -235,7 +174,7 @@ const PropertyBulletin = () => {
                     className="text-gray-600"
                     multiline={true}
                     placeholder="Office address"
-                    toggleEdit={toggleEdit && adminChecker}
+                    toggleEdit={toggleEdit}
                   />
                 </div>
               </div>
@@ -246,7 +185,7 @@ const PropertyBulletin = () => {
                     value={officeEmail}
                     onChange={(value) => updateEditedData('officeEmail', value)}
                     placeholder="Office email"
-                    toggleEdit={toggleEdit && adminChecker}
+                    toggleEdit={toggleEdit}
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -255,7 +194,7 @@ const PropertyBulletin = () => {
                     value={officeWebsite}
                     onChange={(value) => updateEditedData('officeWebsite', value)}
                     placeholder="Office website"
-                    toggleEdit={toggleEdit && adminChecker}
+                    toggleEdit={toggleEdit}
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -268,9 +207,9 @@ const PropertyBulletin = () => {
                           onChange={(value) => updatePhoneNumber(index, 'phoneNumber', value)}
                           className="text-sm"
                           placeholder="Phone number"
-                          toggleEdit={toggleEdit && adminChecker}
+                          toggleEdit={toggleEdit}
                         />
-                        {toggleEdit && adminChecker && (
+                        {toggleEdit && (
                           <button
                             onClick={() => removePhoneNumber(index)}
                             className="p-1 text-red-600 hover:bg-red-100 rounded"
@@ -280,7 +219,7 @@ const PropertyBulletin = () => {
                         )}
                       </div>
                     ))}
-                    {toggleEdit && adminChecker && (
+                    {toggleEdit && (
                       <button
                         onClick={addPhoneNumber}
                         className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
@@ -294,50 +233,65 @@ const PropertyBulletin = () => {
                   {toggleEdit ? <Save className="w-4 h-4 text-green-600" /> : <Crown className="w-4 h-4 text-blue-600" />}
                   {toggleEdit ? (
                     <div className="flex gap-3">
-                      {adminChecker && (
-                        <div className='flex gap-6'>
-                          <span 
-                            onClick={handleSaveChanges} 
-                            className="cursor-pointer text-green-600 hover:text-green-800"
-                          >
-                            Save Changes
-                          </span>
-                          <span 
-                            onClick={() => setToggleEdit(false)} 
-                            className="cursor-pointer text-gray-600 hover:text-gray-800"
-                          >
-                            Cancel
-                          </span>
-                          <span 
-                            onClick={handleResetData} 
-                            className="cursor-pointer text-red-400 hover:text-red-800"
-                          >
-                            Reset
-                          </span>
-                          <span 
-                            onClick={handleSignOut} 
-                            className="cursor-pointer text-slate-800 hover:text-slate-800"
-                          >
-                            Sign out
-                          </span>
-                        </div>
-                      )}
-                      {!adminChecker && isLoggedIn && (
-                        <div className='flex gap-6'>
-                          <span 
-                            onClick={handleSignOut} 
-                            className="cursor-pointer text-slate-800 hover:text-slate-800"
-                          >
-                            Sign out
-                          </span>
-                          <span 
-                            onClick={() => setToggleEdit(false)} 
-                            className="cursor-pointer text-gray-600 hover:text-gray-800"
-                          >
-                            Cancel
-                          </span>
-                        </div>
-                      )}
+                      {
+                        adminChecker && (
+                          <div className='flex gap-6'>
+                            <span 
+                              onClick={
+                                () => handleSaveData(editedData, setToggleEdit, setPcrData, setIsPageLoading, setError)
+                              } 
+                              className="cursor-pointer text-green-600 hover:text-green-800"
+                            >
+                              Save Changes
+                            </span>
+                            <span 
+                              onClick={() => setToggleEdit(false)} 
+                              className="cursor-pointer text-gray-600 hover:text-gray-800"
+                            >
+                              Cancel
+                            </span>
+                            <span 
+                              onClick={() => handleReset(setPcrData, setIsPageLoading, setError)} 
+                              className="cursor-pointer text-red-400 hover:text-red-800"
+                            >
+                              Reset
+                            </span>
+                          </div>
+                        )
+                      }
+                      {
+                        !isLoggedIn ? (
+                          <div className='flex gap-6'>
+                            <span 
+                              onClick={() => setModalOpen(true)} 
+                              className="cursor-pointer text-green-400 hover:text-green-700"
+                            >
+                              Sign in
+                            </span>
+                            <span 
+                              onClick={() => setToggleEdit(false)} 
+                              className="cursor-pointer text-gray-600 hover:text-gray-800"
+                            >
+                              Cancel
+                            </span>
+                          </div>
+                        ) : (
+                          <div className='flex gap-6'>
+                            <span 
+                              onClick={() => handleAuth("SIGNOUT", profileData?.name)} 
+                              className="cursor-pointer text-slate-800 hover:text-slate-800"
+                            >
+                              Sign out
+                            </span>
+                            <span 
+                              onClick={() => setToggleEdit(false)} 
+                              className="cursor-pointer text-gray-600 hover:text-gray-800"
+                            >
+                              Cancel
+                            </span>
+                          </div>
+                        )
+                      }
                     </div>
                   ) : (
                     <span 
@@ -371,7 +325,7 @@ const PropertyBulletin = () => {
                 )}
               </h2>
             </div>
-            {toggleEdit && adminChecker && (
+            {toggleEdit && (
               <button
                 onClick={addProperty}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -387,7 +341,7 @@ const PropertyBulletin = () => {
                 key={property.id} 
                 property={property} 
                 index={index} 
-                toggleEdit={toggleEdit && adminChecker}
+                toggleEdit={toggleEdit}
                 setEditedData={setEditedData}
                 startIndex={startIndex}
                 cloudinaryConfig={cloudinaryConfig}
@@ -420,7 +374,7 @@ const PropertyBulletin = () => {
                 onChange={(value) => updateEditedData('companyName', value)}
                 className="font-semibold"
                 placeholder="Company name"
-                toggleEdit={toggleEdit && adminChecker}
+                toggleEdit={toggleEdit}
               />
             </p>
             <p className="text-gray-600">
@@ -429,7 +383,7 @@ const PropertyBulletin = () => {
                 onChange={(value) => updateEditedData('companyType', value)}
                 className="text-gray-600"
                 placeholder="Company type"
-                toggleEdit={toggleEdit && adminChecker}
+                toggleEdit={toggleEdit}
               />
             </p>
             <p className="text-blue-600 font-medium">
@@ -438,7 +392,7 @@ const PropertyBulletin = () => {
                 onChange={(value) => updateEditedData('officeWebsite', value)}
                 className="text-blue-600 font-medium"
                 placeholder="Website"
-                toggleEdit={toggleEdit && adminChecker}
+                toggleEdit={toggleEdit}
               />
             </p>
             <div className="flex flex-wrap justify-center gap-4 mt-4">
@@ -450,14 +404,14 @@ const PropertyBulletin = () => {
                       value={number.phoneNumber}
                       onChange={(value) => updatePhoneNumber(index, 'phoneNumber', value)}
                       placeholder="Phone number"
-                      toggleEdit={toggleEdit && adminChecker}
+                      toggleEdit={toggleEdit}
                     />
                     {' - '}
                     <EditableText
                       value={number.name}
                       onChange={(value) => updatePhoneNumber(index, 'name', value)}
                       placeholder="Name"
-                      toggleEdit={toggleEdit && adminChecker}
+                      toggleEdit={toggleEdit}
                     />
                   </span>
                 </div>
@@ -468,14 +422,11 @@ const PropertyBulletin = () => {
       </div>
 
       {/* Auth Modal */}
-      {modalOpen && (
-        <AuthModal 
-          isOpen={modalOpen} 
-          onClose={() => setModalOpen(false)} 
-          setIsLoggedIn={setIsLoggedIn} 
-          onAuthSuccess={refreshUserData} 
-        />
-      )}
+      {
+        modalOpen && (
+          <AuthModal isOpen={modalOpen} onClose={() => setModalOpen(false)} setIsLoggedIn={setIsLoggedIn} />
+        )
+      }
     </div>
   );
 };

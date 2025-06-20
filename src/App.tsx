@@ -8,7 +8,7 @@ function App() {
 
   return (
     <>
-      <Toaster/>
+      <Toaster position="top-right" richColors closeButton={true} />
       <PropertyBulletin />
     </>
   )
