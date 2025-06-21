@@ -38,7 +38,7 @@ const PropertyBulletin = () => {
   const cloudinaryConfig = { cloudName: cloudName, uploadPreset: uploadPreset }
 
   // Admin email constant
-  const ADMIN_EMAIL = useMemo(() => (["ogbogukenny@yahoo.com", "shinjinchu@gmail.com"]), []);
+  const ADMIN_EMAIL = useMemo(() => (["ogbogukenny@yahoo.com"]), []);
 
   const { 
     headerTitle, 
