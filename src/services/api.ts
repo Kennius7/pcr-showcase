@@ -26,14 +26,6 @@ interface UserProfileData {
 type SetProfileData = (data: UserProfileData) => void;
 type SetIsTokenExpired = (expired: boolean) => void;
 
-const postOptions = {
-    successMessage: 'User created successfully!',
-    errorMessage: 'Failed to create user',
-    // headers: {
-    //   'Authorization': `Bearer ${token}`
-    // }
-}
-
 const successStylingOptions = {
     duration: 3000,
     className: "bg-green-50 border border-green-400 text-green-800 shadow-md",
@@ -146,10 +138,8 @@ export const handleReset = async (
     if (result.isConfirmed) {
         console.log("User confirmed - continuing execution");
 
-        const {
-            successMessage = "Data posted successfully!",
-            errorMessage = "Failed to post data",
-        } = postOptions;
+        const successMessage = "Data posted successfully!"
+        const errorMessage = "Failed to post data"
 
         try {
             const loadingToast = toast.loading("Posting data...");
@@ -210,10 +200,8 @@ export const handleSaveData = async (
     if (result.isConfirmed) {
         console.log('User confirmed - continuing execution');
 
-        const {
-            successMessage = 'Data saved successfully!',
-            errorMessage = 'Failed to save data',
-        } = postOptions;
+        const successMessage = 'Data saved successfully!'
+        const errorMessage = 'Failed to save data';
 
         try {
             const loadingToast: string | number = toast.loading('Saving data...');

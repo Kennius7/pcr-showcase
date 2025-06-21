@@ -49,7 +49,7 @@ const PropertyCard = ({
 
     return (
         <div className="flex md:flex-row flex-col md:justify-between justify-center md:items-start 
-            items-center bg-white border border-gray-200 rounded-lg md:p-6 p-2 shadow-sm hover:shadow-md 
+            items-start bg-white border border-gray-200 rounded-lg md:p-6 p-3 shadow-sm hover:shadow-md 
             transition-shadow relative"
         >
             {toggleEdit && adminChecker && (
@@ -69,11 +69,11 @@ const PropertyCard = ({
                     ) : null
                 }
                 <div className="flex-1">
-                    <div className="font-semibold text-gray-900 mb-2 leading-relaxed">
+                    <div className="font-semibold text-gray-900 mb-2 md:leading-relaxed leading-normal">
                         <EditablePropContent
                             value={property.description}
                             onChange={(value) => updateProperty(index, 'description', value)}
-                            className="font-semibold text-gray-900"
+                            className="font-semibold text-gray-900 md:text-2xl text-lg"
                             multiline={true}
                             placeholder="Property description"
                             toggleEdit={toggleEdit}

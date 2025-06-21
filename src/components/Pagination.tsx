@@ -31,8 +31,9 @@ const PaginationControls = ({
     }
 
     return (
-        <div className="flex items-center justify-between mt-8 p-4 bg-white rounded-lg shadow-sm">
-            <div className="flex items-center gap-4">
+        <div className="flex md:flex-row flex-col-reverse items-center md:justify-between justify-center 
+            mt-8 p-4 bg-white rounded-lg shadow-sm">
+            <div className="flex md:flex-row flex-col justify-center items-center md:gap-4 gap-2 md:mt-0 mt-2">
                 <span className="text-sm text-gray-600">
                     Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} properties
                 </span>
